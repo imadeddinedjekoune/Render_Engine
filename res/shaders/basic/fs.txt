@@ -1,0 +1,10 @@
+#version 440 core
+
+uniform sampler2D texture1;
+
+in vec2 TexCoord;
+
+void main()
+{
+    gl_FragColor = texture(texture1, TexCoord); 
+}
