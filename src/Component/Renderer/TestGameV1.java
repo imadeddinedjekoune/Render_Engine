@@ -5,11 +5,16 @@
  */
 package Component.Renderer;
 
+import Animation.KERNAL.AnimatedModel;
+import Animation.KERNAL.Animation;
+import Animation.Loader.AnimatedModelLoader;
+import Animation.Loader.AnimationLoader;
 import Component.Mesh.Model.LightSource;
 import Utils.Math.Vector3f;
 import Component.Mesh.Mesh;
 import Component.Mesh.MeshGenerator;
 import Component.Mesh.MeshUtilities;
+import Component.Mesh.Model.AnimatedPlayer;
 import Component.Mesh.Model.Model;
 import Component.Mesh.Model.Player;
 import Component.Mesh.OBJLoader;
@@ -18,6 +23,7 @@ import Component.Mesh.Texture;
 import Component.Transform.Camera;
 import Component.Transform.Projection;
 import Component.Render.Render;
+import Component.Shader.AnimShader;
 import Component.Shader.BasicShader;
 import Component.Shader.Complex_Light_Object_Shader;
 import Component.Shader.Light_Object_Shader;
@@ -25,6 +31,7 @@ import Component.Shader.Light_Source_Shader;
 import Component.Shader.Shader;
 import Component.Shader.TerrainShader;
 import Component.Transform.Transform;
+import Utils.Files.MyFile;
 import Utils.Input.Input;
 import Utils.Window.Window;
 import java.util.ArrayList;
@@ -40,7 +47,7 @@ public class TestGameV1 {
     
 
     private Model tree , fern ;
-    private Player man ;
+    private AnimatedPlayer man ;
     private TerrainShader terrainShader ;
     private Light_Object_Shader shader_light  ;
     private Light_Source_Shader shader_lampe ;
@@ -53,6 +60,9 @@ public class TestGameV1 {
     private ArrayList<Vector3f> position_trees = new ArrayList<>();
     private ArrayList<Vector3f> Scale_trees = new ArrayList<>();
     private ArrayList<Vector3f> position_ferns = new ArrayList<>();
+    private AnimShader animationShader ;
+
+    
     
     int nbTrees = 200 ;
     int nbFerns = 5 ;
@@ -61,7 +71,7 @@ public class TestGameV1 {
     {
         
         projection = new Projection(0.1f,4000f,Window.getNewWidth(), Window.getNewHeight(), 70f);
-        camera = new Camera(new Vector3f(0.70710677f , -1.0f , 0.70710677f), new Vector3f(1, 0, 1), new Vector3f(0, 1, 0));
+        camera = new Camera(new Vector3f(-136.13307f, -2.3382692f , -136.13307f), new Vector3f(1, 0, 1), new Vector3f(0, 1, 0));
         
         terrain = new Terrain(1000, 1000, new Texture(Texture.loadTexture("grass.png")),
                 new Texture(Texture.loadTexture("grassFlowers.png")),
@@ -71,15 +81,27 @@ public class TestGameV1 {
         tree = new Model(OBJLoader.loadObjModel("tree.obj"),
                new Texture(Texture.loadTexture("tree.png")));
         lampe = new LightSource(MeshUtilities.load_To_Mesh(MeshGenerator.cube_position, null,null , null, null, null, 0),
-                new Vector3f(1200f, 500f, 1200f), new Vector3f(0.1f, 0.1f, 0.1f));
+                new Vector3f(1200f, 500f, 1200f), new Vector3f(0.8f, 0.8f, 0.7f));
         house = new Model(OBJLoader.loadObjModel("stall.obj"),
                 new Texture(Texture.loadTexture("stallTexture.png")));
         fern = new Model(OBJLoader.loadObjModel("fern.obj"),
                new Texture(Texture.loadTexture("fern.png")));
         fern.setTransparence(true);
-        man = new Player(OBJLoader.loadObjModel("person.obj"),
-                        new Texture(Texture.loadTexture("playerTexture.png")),camera);
         
+        AnimatedModel aModel ;
+        Animation animation ;
+        
+        MyFile fileModel = new MyFile("./res/collada/model.dae");
+        MyFile fileTexture = new MyFile("./res/collada/diffuse.png");
+        
+        aModel = AnimatedModelLoader.loadEntity(fileModel, fileTexture);
+        animation = AnimationLoader.loadAnimation(new MyFile(fileModel));
+        
+        
+        man = new AnimatedPlayer(aModel,animation,camera);
+        man.doAnimation();
+        man.playerBestAgrs();
+        man.getTransform().setTranslation(new Vector3f(140, 0, 140));
         
         terrainShader = new TerrainShader(projection,camera,terrain,lampe);
         terrainShader.init();
@@ -91,6 +113,10 @@ public class TestGameV1 {
         lampe.getTransform().setTranslation(lampe.getLightPos());
         shader_lampe.setUniform("trasnform", lampe.getTransform().getTransformation());
         
+        animationShader = new AnimShader(new Transform(), projection, camera, lampe);
+        animationShader.init();
+        animationShader.setUniform("trasnform", new Transform().getTransformation());
+
         
         shader_light = new Light_Object_Shader(new Transform(), projection, camera, lampe);
         shader_light.init();
@@ -161,7 +187,7 @@ public class TestGameV1 {
         // Render Stall //
         complex_shader_light.binTexture(house);
         house.getTransform().setTranslation(new Vector3f(150, 0, 150));
-        house.getTransform().setScale(new Vector3f(0.5f, 0.5f, 0.5f));
+        house.getTransform().setScale(new Vector3f(0.3f, 0.3f, 0.3f));
         complex_shader_light.setUniform("trasnform", house.getTransform().getTransformation());
         Render.renderEBO(house.getMesh());
         complex_shader_light.stop();
@@ -186,16 +212,16 @@ public class TestGameV1 {
         Render.render_WithoutEBO(lampe.getMesh());
         shader_lampe.start();
         
-        complex_shader_light.start();
-        complex_shader_light.binTexture(man.getTexture());
-        complex_shader_light.useFakeLight(false);
-        complex_shader_light.setUniformi("useLight",1);
-        complex_shader_light.setUniformi("useLight",1);
-        man.getTransform().setScale(new Vector3f(0.05f,0.05f,0.05f));
-        complex_shader_light.setUniform("trasnform",man.getTransform().getTransformation());
-        Render.renderEBO(man.getMesh());
-        complex_shader_light.stop();
-        complex_shader_light.unbinTexture(man.getTexture());
+        animationShader.start();
+        animationShader.binTexture(man.getMesh().getTexture());
+        animationShader.useFakeLight(false);
+        animationShader.setUniformi("useLight",1);
+        animationShader.LoadMatrix(man.getMesh().getJointTransforms());
+        man.getTransform().setScale(new Vector3f(0.1f,0.1f,0.1f));
+        animationShader.setUniform("trasnform",man.getTransform().getTransformation());
+        Render.renderEBO2(man.getMesh().getModel());
+        animationShader.stop();
+        animationShader.unbinTexture(man.getMesh().getTexture());
     }
     
     public void update ()
@@ -204,6 +230,7 @@ public class TestGameV1 {
         shader_lampe.update_Cam();
         shader_light.update_Cam();
         complex_shader_light.update_Cam();
+        animationShader.update_Cam();
     }
     
     boolean manControl = false ;

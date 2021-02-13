@@ -63,8 +63,8 @@ public class AnimatedPlayer {
     
     public void playerBestAgrs ()
     {
-        cam.setPitch(0.2399997f);
-        distanceFromPlayer =  5.630021f;
+        cam.setPitch(-0.1f);
+        distanceFromPlayer =   0.97f;
     }
     
     public void move_()
@@ -211,7 +211,6 @@ public class AnimatedPlayer {
         {
             float pitchChange = Mouse.getDY() * 0.01f ;
             cam.setPitch(cam.getPitch()-pitchChange);
-            //System.out.println(cam.getPitch()+" "+this.distanceFromPlayer);
         }
         
         if (Mouse.isButtonDown(0))

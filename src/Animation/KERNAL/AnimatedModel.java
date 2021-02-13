@@ -37,6 +37,10 @@ public class AnimatedModel
             return rootJoint;
     }
 
+    public Animator getAnimator() {
+        return animator;
+    }
+
 
     public void doAnimation(Animation animation) {
             animator.doAnimation(animation);

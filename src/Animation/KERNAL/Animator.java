@@ -20,6 +20,14 @@ public class Animator {
 		this.entity = entity;
 	}
 
+    public float getAnimationTime() {
+        return animationTime;
+    }
+
+    public void setAnimationTime(float animationTime) {
+        this.animationTime = animationTime;
+    }
+
 	
 	public void doAnimation(Animation animation) {
 		this.animationTime = 0;
